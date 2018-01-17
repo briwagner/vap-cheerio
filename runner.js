@@ -1,5 +1,6 @@
 var http = require('http');
 const cheerio = require("cheerio");
+const fs = require('fs');
 
 var hostname = 'http://www.saic.edu';
 
@@ -11,19 +12,36 @@ var links = [
 ];
 
 var getElements = function(x) {
+  var stream = fs.createWriteStream('audioFiles.txt', {flags: 'a'});
+
   let $ = cheerio.load(x);
   let lis = $('li.mp3.present');
   lis.each(function(i, item) {
+    // Print text.
     // console.log( $(item).text() );
-    let nextSibling = item.nextSibling;
-    console.log( $(nextSibling).tagName );
+    stream.write( $(item).text() );
+    stream.write( "\n" );
+
+    // Look for sibling with audio element.
+    let nextSibling = $(item).next();
     if ( $(nextSibling).hasClass('mp3link') ) {
-      let audio = nextSibling.find('audio');
-      // console.log(audio);
-    } else {
-      // console.log( $(nextSibling).name );
+    //   console.log(nextSibling);
+      let audio = $(nextSibling).find('audio').find('source');
+      stream.write( audio.attr('src') );
+      stream.write( "\n" );
+      // console.log( audio.attr('src'), 'audio');
+      // for(var propName in audio) {
+      //   console.log(propName);
+      // }
     }
-  })
+  });
+return;
+  let mp3s = $('div.mp3link');
+  mp3s.each(function(i, elem) {
+    // console.log(elem.name);
+    let audio = $(elem).find('audio').find('source');
+    console.log(audio.attr('src'));
+  });
 }
 
 links.forEach(function(x) {
